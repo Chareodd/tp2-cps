@@ -13,9 +13,6 @@ BFILE *bstart(FILE *fichier, const char *mode) {
 }
 
 int bstop(BFILE *fichier) {
-    if (fichier->buffer) {
-        fprintf(fichier->f, "%c", fichier->buffer) ;
-    }
     free(fichier) ;
     return 0 ;
 }
@@ -32,22 +29,30 @@ char bitread(BFILE *fichier) {
     }
     char bit ;
     bit &= 0 ;
-    bit = fichier->buffer & 1 ;
-    fichier->buffer = (fichier->buffer >> 1) & ~(1 << 7) ;
+    bit = (fichier->buffer & (1 << 7)) >> 7 ;
+    fichier->buffer = (fichier->buffer << 1) ;
     fichier->length-- ;
     return bit ;
 }
 
 int bitwrite(BFILE *fichier, char bit) {
     if (fichier->mode != 'w') return -1 ;
-    if (fichier->length == 8) {
+    if (fichier->length < 8) {
+        if (bit) {
+        fichier->buffer |= (1 << (7 - fichier->length)) ;
+        fichier->length++ ;
+        } else {    //bit à 0
+            fichier->length++ ;
+        }
+        if (fichier->length == 8) {
+            fichier->length = 0 ;
+            fprintf(fichier->f, "%c", fichier->buffer) ;
+            fichier->buffer &= 0 ;
+        }
+    } else {
         fichier->length = 0 ;
         fprintf(fichier->f, "%c", fichier->buffer) ;
         fichier->buffer &= 0 ;
-    }
-    if (bit) {
-        fichier->buffer |= (1 << fichier->length) ;
-        fichier->length++ ;
     }
     return 1 ;
 }
