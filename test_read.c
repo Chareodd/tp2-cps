@@ -109,7 +109,6 @@ int main()
       c = fgetc(bfichier->f) ;
       dir = fgetc(bfichier->f) ;
     }
-  //non nécessaire si tous se passe bien
   bstop(bfichier);
   return 0;
 }
